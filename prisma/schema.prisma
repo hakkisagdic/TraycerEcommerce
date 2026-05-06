@@ -1,0 +1,13 @@
+// Minimal Blog CMS - Prisma schema skeleton.
+// Concrete models (User, Post, Category, Tag, Comment, Media, PostTag) and
+// FTS5 virtual table land in T3. T1 keeps only the datasource + generator
+// so `prisma db push` can create an empty SQLite database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
