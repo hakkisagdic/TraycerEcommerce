@@ -1,3 +1,6 @@
+import AdminSidebar from "../../components/admin/AdminSidebar";
+import ToasterWrapper from "../../components/admin/ToasterWrapper";
+
 export default function AdminLayout({
   children,
 }: {
@@ -5,7 +8,9 @@ export default function AdminLayout({
 }) {
   return (
     <div className="flex min-h-screen bg-muted/40">
-      <main className="flex-1">{children}</main>
+      <AdminSidebar />
+      <main className="flex-1 p-6">{children}</main>
+      <ToasterWrapper />
     </div>
   );
 }
