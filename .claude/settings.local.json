@@ -8,7 +8,8 @@
       "Bash(npx next *)",
       "Bash(npx tsc *)",
       "Read(//Users/hakkisagdic/.traycer/**)",
-      "Read(//Users/hakkisagdic/.traycer/yolo_artifacts/**)"
+      "Read(//Users/hakkisagdic/.traycer/yolo_artifacts/**)",
+      "Bash(env)"
     ]
   }
 }
