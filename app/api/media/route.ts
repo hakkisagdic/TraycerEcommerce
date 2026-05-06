@@ -14,7 +14,6 @@ const ALLOWED_EXTENSIONS: Record<string, string> = {
   "image/png": ".png",
   "image/gif": ".gif",
   "image/webp": ".webp",
-  "image/svg+xml": ".svg",
 };
 const SUPPORTED_MIME_TYPES = Object.keys(ALLOWED_EXTENSIONS);
 

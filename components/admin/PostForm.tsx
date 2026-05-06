@@ -1,15 +1,58 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { slugify } from "../../lib/utils";
 import { toast } from "sonner";
+import PostEditor from "./PostEditor";
+
+function plainTextToTipTapDoc(text: string): object {
+  const value = (text ?? "").toString();
+  if (!value.trim()) {
+    return { type: "doc", content: [{ type: "paragraph" }] };
+  }
+  const paragraphs = value.split(/\n\n+/);
+  return {
+    type: "doc",
+    content: paragraphs.map((p) => {
+      const lines = p.split("\n");
+      const inlineContent: any[] = [];
+      lines.forEach((line, idx) => {
+        if (line.length > 0) inlineContent.push({ type: "text", text: line });
+        if (idx < lines.length - 1) inlineContent.push({ type: "hardBreak" });
+      });
+      return inlineContent.length === 0
+        ? { type: "paragraph" }
+        : { type: "paragraph", content: inlineContent };
+    }),
+  };
+}
 
 export default function PostForm({ initial, categories = [], tags = [] }: any) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [contentText, setContentText] = useState(initial?.contentText ?? "");
-  const [contentJson, setContentJson] = useState(initial?.contentJson ?? initial?.contentText ?? "");
+
+  const initialJson = useMemo<object>(() => {
+    const raw = initial?.contentJson;
+    const fallbackText = initial?.contentText ?? "";
+    if (!raw) return plainTextToTipTapDoc(fallbackText);
+    if (typeof raw === "object") return raw;
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (!trimmed) return plainTextToTipTapDoc(fallbackText);
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === "object") return parsed;
+        return plainTextToTipTapDoc(raw);
+      } catch {
+        return plainTextToTipTapDoc(raw);
+      }
+    }
+    return plainTextToTipTapDoc(fallbackText);
+  }, [initial?.contentJson, initial?.contentText]);
+
+  const [contentJson, setContentJson] = useState<object | null>(initialJson);
   const [categoryId, setCategoryId] = useState<string | null>(initial?.categoryId ?? null);
   const [tagIds, setTagIds] = useState<string[]>(initial?.tags?.map((t: any) => t.id) ?? []);
   const [featuredImage, setFeaturedImage] = useState(initial?.featuredImage ?? "");
@@ -29,17 +72,24 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
     setSlug(val);
   }
 
+  function handleEditorChange(json: object, text: string) {
+    setContentJson(json);
+    setContentText(text);
+  }
+
   async function handleSubmit(e: React.FormEvent, status = "draft") {
     e.preventDefault();
 
-    // mirror textarea into both contentText and contentJson for now
-    setContentJson(contentText);
+    if (!contentText.trim()) {
+      toast.error("İçerik boş olamaz");
+      return;
+    }
 
     const payload: any = {
       title,
       slug,
       contentText,
-      contentJson,
+      contentJson: JSON.stringify(contentJson ?? initialJson),
       status,
       categoryId: categoryId || null,
       tagIds,
@@ -75,7 +125,7 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
         <input value={slug} onChange={(e) => onSlugChange(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
 
         <label className="block text-sm mt-4">İçerik</label>
-        <textarea value={contentText} onChange={(e) => setContentText(e.target.value)} rows={12} className="w-full p-2 bg-white/5 rounded" />
+        <PostEditor initialContent={initialJson} onChange={handleEditorChange} />
       </div>
 
       <aside className="col-span-1">
