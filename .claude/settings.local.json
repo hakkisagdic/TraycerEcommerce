@@ -5,7 +5,10 @@
       "Bash(npx --version)",
       "Bash(npm install *)",
       "Bash(npx prisma *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(npx tsc *)",
+      "Read(//Users/hakkisagdic/.traycer/**)",
+      "Read(//Users/hakkisagdic/.traycer/yolo_artifacts/**)"
     ]
   }
 }

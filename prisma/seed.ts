@@ -1,7 +1,31 @@
+import bcrypt from "bcryptjs";
+
 import { prisma } from "../lib/prisma";
 
 async function main() {
-  // Seed logic will be added in T2 after the data model is finalized in T3.
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@blog.com")
+    .trim()
+    .toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "admin123";
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash,
+      name: "Admin",
+      role: "admin",
+    },
+    create: {
+      email: adminEmail,
+      passwordHash,
+      name: "Admin",
+      role: "admin",
+    },
+  });
+
+  console.log(`Seeded admin user: ${adminEmail}`);
 }
 
 main()

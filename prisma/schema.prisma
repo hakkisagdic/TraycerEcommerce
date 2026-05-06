@@ -1,7 +1,7 @@
-// Minimal Blog CMS - Prisma schema skeleton.
-// Concrete models (User, Post, Category, Tag, Comment, Media, PostTag) and
-// FTS5 virtual table land in T3. T1 keeps only the datasource + generator
-// so `prisma db push` can create an empty SQLite database.
+// Minimal Blog CMS - Prisma schema.
+// T2 introduces the User model required for authentication. The remaining
+// models (Post, Category, Tag, Comment, Media, PostTag) and the FTS5
+// virtual table are added in T3.
 
 generator client {
   provider = "prisma-client-js"
@@ -10,4 +10,15 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+// SQLite does not support native enum types, so Role is stored as a string.
+// Allowed values: "admin" | "reader". Validated at the application layer.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         String   @default("reader")
+  createdAt    DateTime @default(now())
 }
