@@ -5,15 +5,8 @@ import Pagination from "../../components/public/Pagination";
 export default async function HomePage({ searchParams }: { searchParams?: any }) {
   const page = Math.max(1, Number(searchParams?.page ?? 1));
   const limit = Math.min(20, Math.max(1, Number(searchParams?.limit ?? 10)));
-  const q = typeof searchParams?.q === "string" ? searchParams.q.trim() : "";
 
   const where: any = { status: "published" };
-  if (q) {
-    where.OR = [
-      { title: { contains: q, mode: "insensitive" } },
-      { contentText: { contains: q, mode: "insensitive" } },
-    ];
-  }
 
   const [items, total] = await Promise.all([
     prisma.post.findMany({
@@ -32,8 +25,8 @@ export default async function HomePage({ searchParams }: { searchParams?: any })
     <div className="py-8">
       <h1 className="text-3xl font-bold mb-6">Blog</h1>
 
-      <form method="get" className="mb-4">
-        <input name="q" defaultValue={q} placeholder="Ara..." className="px-3 py-2 bg-white/5 rounded w-full max-w-md" />
+      <form action="/search" method="get" className="mb-4">
+        <input name="q" placeholder="Ara..." className="px-3 py-2 bg-white/5 rounded w-full max-w-md" />
       </form>
 
       <div className="flex flex-col">
