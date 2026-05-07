@@ -9,7 +9,22 @@
       "Bash(npx tsc *)",
       "Read(//Users/hakkisagdic/.traycer/**)",
       "Read(//Users/hakkisagdic/.traycer/yolo_artifacts/**)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(lsof -nP -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(lsof -nP -iTCP:3001 -sTCP:LISTEN)",
+      "Bash(lsof -nP -iTCP -sTCP:LISTEN -c node)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /tmp/mcp-init.json -w 'HTTP %{http_code}\\\\n' -X POST http://localhost:3001/api/mcp/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}')",
+      "Bash(curl -v -X POST http://localhost:3001/api/mcp/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}')",
+      "Bash(unset PRISMA_QUERY_ENGINE_LIBRARY)",
+      "Bash(curl -s -i -X POST http://localhost:3001/api/mcp/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}')",
+      "Bash(curl -v --max-time 15 -X POST http://localhost:3001/api/mcp/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}')",
+      "Bash(awk '{print $2}')",
+      "Bash(xargs -r kill)",
+      "Bash(curl -s -i --max-time 30 -X POST http://localhost:3001/api/mcp/mcp -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"probe\",\"version\":\"0.0.1\"}}}')"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }
