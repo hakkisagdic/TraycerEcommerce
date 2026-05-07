@@ -10,7 +10,7 @@ async function main() {
 
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-  await prisma.user.upsert({
+  const admin = await prisma.user.upsert({
     where: { email: adminEmail },
     update: {
       passwordHash,
@@ -26,6 +26,39 @@ async function main() {
   });
 
   console.log(`Seeded admin user: ${adminEmail}`);
+
+  // Add test post
+  const contentJson = {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "yes ok oldu bu metin otomatik eklendi!",
+          },
+        ],
+      },
+    ],
+  };
+
+  const post = await prisma.post.upsert({
+    where: { slug: "deneme-mcp" },
+    update: {},
+    create: {
+      title: "Deneme MCP",
+      slug: "deneme-mcp",
+      contentJson: JSON.stringify(contentJson),
+      contentText: "yes ok oldu bu metin otomatik eklendi!",
+      excerpt: "Deneme MCP post'u",
+      status: "published",
+      authorId: admin.id,
+      publishedAt: new Date(),
+    },
+  });
+
+  console.log(`Seeded post: ${post.title}`);
 }
 
 main()
