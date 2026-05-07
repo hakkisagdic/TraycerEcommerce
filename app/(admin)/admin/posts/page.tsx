@@ -3,11 +3,12 @@ import PostsTable from "../../../../components/admin/PostsTable";
 import PostFilters from "../../../../components/admin/PostFilters";
 import Link from "next/link";
 
-export default async function PostsPage({ searchParams }: { searchParams?: any }) {
+export default async function PostsPage({ searchParams }: { searchParams: Promise<{ status?: string; categoryId?: string; q?: string }> }) {
+  const params = await searchParams;
   const where: any = {};
-  if (searchParams?.status) where.status = searchParams.status;
-  if (searchParams?.categoryId) where.categoryId = searchParams.categoryId;
-  if (searchParams?.q) where.title = { contains: searchParams.q, mode: "insensitive" };
+  if (params?.status) where.status = params.status;
+  if (params?.categoryId) where.categoryId = params.categoryId;
+  if (params?.q) where.title = { contains: params.q, mode: "insensitive" };
 
   const posts = await prisma.post.findMany({
     where,

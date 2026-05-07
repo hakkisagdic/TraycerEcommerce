@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 const ALLOWED_STATUSES = new Set(["draft", "published"]);
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   const isAdmin = session?.user?.role === "admin";
   const authorSelect = isAdmin
@@ -15,7 +16,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     : { id: true, name: true };
 
   const post = await prisma.post.findUnique({
-    where: { id: params.id },
+    where: { id: p.id },
     include: {
       category: true,
       tags: { include: { tag: true } },
@@ -40,6 +41,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 }
 
 export async function PUT(request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -52,7 +54,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const existing = await prisma.post.findUnique({ where: { id: params.id } });
+  const existing = await prisma.post.findUnique({ where: { id: p.id } });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
@@ -105,7 +107,7 @@ export async function PUT(request: Request, { params }: RouteContext) {
 
   const updated = await prisma.$transaction(async (tx) => {
     const post = await tx.post.update({
-      where: { id: params.id },
+      where: { id: p.id },
       data,
     });
 
@@ -132,16 +134,17 @@ export async function PUT(request: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const existing = await prisma.post.findUnique({ where: { id: params.id } });
+  const existing = await prisma.post.findUnique({ where: { id: p.id } });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.post.delete({ where: { id: params.id } });
+  await prisma.post.delete({ where: { id: p.id } });
   return NextResponse.json({ success: true });
 }

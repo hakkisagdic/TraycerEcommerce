@@ -109,7 +109,8 @@ function Toolbar({ editor }: { editor: Editor }) {
       .run();
   }
 
-  function handleImageUpload(url: string) {
+  function handleImageUpload(urlOrMedia: string | { url: string }) {
+    const url = typeof urlOrMedia === "string" ? urlOrMedia : urlOrMedia.url;
     editor.chain().focus().setImage({ src: url }).run();
   }
 

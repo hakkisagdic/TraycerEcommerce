@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useFormState } from "react-dom";
 import { slugify } from "../../lib/utils";
-import { toast } from "sonner";
 import PostEditor from "./PostEditor";
+import { savePost, type PostFormState } from "./actions";
 
 function plainTextToTipTapDoc(text: string): object {
   const value = (text ?? "").toString();
@@ -28,7 +28,7 @@ function plainTextToTipTapDoc(text: string): object {
 }
 
 export default function PostForm({ initial, categories = [], tags = [] }: any) {
-  const router = useRouter();
+  const [state, formAction] = useFormState<PostFormState, FormData>(savePost, {});
   const [title, setTitle] = useState(initial?.title ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [contentText, setContentText] = useState(initial?.contentText ?? "");
@@ -77,52 +77,31 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
     setContentText(text);
   }
 
-  async function handleSubmit(e: React.FormEvent, status = "draft") {
-    e.preventDefault();
-
-    if (!contentText.trim()) {
-      toast.error("İçerik boş olamaz");
-      return;
-    }
-
-    const payload: any = {
-      title,
-      slug,
-      contentText,
-      contentJson: JSON.stringify(contentJson ?? initialJson),
-      status,
-      categoryId: categoryId || null,
-      tagIds,
-      featuredImage: featuredImage || null,
-      seoTitle: seoTitle || null,
-      seoDescription: seoDescription || null,
-    };
-
-    const method = initial?.id ? "PUT" : "POST";
-    const url = initial?.id ? `/api/posts/${initial.id}` : "/api/posts";
-
-    try {
-      const res = await fetch(url, { method, body: JSON.stringify(payload), headers: { "Content-Type": "application/json" } });
-      if (res.ok) {
-        toast.success("Yazı kaydedildi");
-        router.push("/admin/posts");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        toast.error(data?.message || "Kaydetme sırasında hata oluştu");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Ağ hatası");
-    }
-  }
-
   return (
-    <form onSubmit={(e) => handleSubmit(e)} className="grid grid-cols-3 gap-6">
+    <form action={formAction} className="grid grid-cols-3 gap-6">
       <div className="col-span-2">
+        <input type="hidden" name="id" value={initial?.id ?? ""} />
+        <input type="hidden" name="contentText" value={contentText} />
+        <input
+          type="hidden"
+          name="contentJson"
+          value={JSON.stringify(contentJson ?? initialJson)}
+        />
         <label className="block text-sm">Başlık</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
+        <input
+          name="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-2 bg-white/5 rounded"
+        />
 
         <label className="block text-sm mt-4">Slug</label>
-        <input value={slug} onChange={(e) => onSlugChange(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
+        <input
+          name="slug"
+          value={slug}
+          onChange={(e) => onSlugChange(e.target.value)}
+          className="w-full p-2 bg-white/5 rounded"
+        />
 
         <label className="block text-sm mt-4">İçerik</label>
         <PostEditor initialContent={initialJson} onChange={handleEditorChange} />
@@ -131,7 +110,12 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
       <aside className="col-span-1">
         <div className="bg-white/5 p-4 rounded">
           <label className="block text-sm">Kategori</label>
-          <select value={categoryId ?? ""} onChange={(e) => setCategoryId(e.target.value || null)} className="w-full p-2 bg-white/5 rounded">
+          <select
+            name="categoryId"
+            value={categoryId ?? ""}
+            onChange={(e) => setCategoryId(e.target.value || null)}
+            className="w-full p-2 bg-white/5 rounded"
+          >
             <option value="">Seçiniz</option>
             {categories.map((c: any) => (
               <option key={c.id} value={c.id}>
@@ -146,6 +130,8 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
               <label key={t.id} className="text-sm">
                 <input
                   type="checkbox"
+                  name="tagIds"
+                  value={t.id}
                   checked={tagIds.includes(t.id)}
                   onChange={(e) => {
                     if (e.currentTarget.checked) setTagIds((s) => Array.from(new Set([...s, t.id])));
@@ -159,19 +145,50 @@ export default function PostForm({ initial, categories = [], tags = [] }: any) {
           </div>
 
           <label className="block text-sm mt-4">Öne Çıkan Görsel URL</label>
-          <input value={featuredImage} onChange={(e) => setFeaturedImage(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
+          <input
+            name="featuredImage"
+            value={featuredImage}
+            onChange={(e) => setFeaturedImage(e.target.value)}
+            className="w-full p-2 bg-white/5 rounded"
+          />
 
           <label className="block text-sm mt-4">SEO Başlığı</label>
-          <input value={seoTitle} onChange={(e) => setSeoTitle(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
+          <input
+            name="seoTitle"
+            value={seoTitle}
+            onChange={(e) => setSeoTitle(e.target.value)}
+            className="w-full p-2 bg-white/5 rounded"
+          />
 
           <label className="block text-sm mt-4">SEO Açıklama</label>
-          <textarea value={seoDescription} onChange={(e) => setSeoDescription(e.target.value)} className="w-full p-2 bg-white/5 rounded" />
+          <textarea
+            name="seoDescription"
+            value={seoDescription}
+            onChange={(e) => setSeoDescription(e.target.value)}
+            className="w-full p-2 bg-white/5 rounded"
+          />
+
+          {state.error ? (
+            <p role="alert" className="mt-3 text-sm text-red-400">
+              {state.error}
+            </p>
+          ) : null}
 
           <div className="mt-4 flex gap-2">
-            <button type="button" onClick={(e) => handleSubmit(e as any, "draft")} className="px-3 py-2 bg-zinc-800 rounded">
+            <button
+              type="submit"
+              name="status"
+              value="draft"
+              className="px-3 py-2 bg-zinc-800 rounded"
+            >
               Taslak Kaydet
             </button>
-            <button type="button" onClick={(e) => handleSubmit(e as any, "published")} className="px-3 py-2 bg-blue-600 rounded">
+            <button
+              type="submit"
+              name="status"
+              value="published"
+              className="px-3 py-2 bg-blue-600 rounded"
+            >
               Yayınla
             </button>
           </div>

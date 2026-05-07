@@ -6,32 +6,32 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } },
+  { params }: RouteContext,
 ) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const media = await prisma.media.findUnique({ where: { id: params.id } });
+  const media = await prisma.media.findUnique({ where: { id: p.id } });
   if (!media) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const relativePath = media.url.startsWith("/") ? media.url.slice(1) : media.url;
-  const filePath = path.join(process.cwd(), "public", relativePath);
-
-  try {
-    await unlink(filePath);
-  } catch (err: any) {
-    if (err?.code !== "ENOENT") {
-      // ignore: best-effort filesystem cleanup; DB is the source of truth
+  if (media.filename) {
+    const mediaPath = path.join(process.cwd(), "public", "uploads", media.filename);
+    try {
+      await unlink(mediaPath);
+    } catch {
+      // File might not exist, ignore error
     }
   }
 
-  await prisma.media.delete({ where: { id: params.id } });
-
+  await prisma.media.delete({ where: { id: p.id } });
   return NextResponse.json({ success: true });
 }

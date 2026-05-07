@@ -1,9 +1,10 @@
 import { prisma } from "../../../../lib/prisma";
 import CommentsTable from "../../../../components/admin/CommentsTable";
 
-export default async function CommentsPage({ searchParams }: { searchParams?: any }) {
+export default async function CommentsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+  const params = await searchParams;
   const where: any = {};
-  if (searchParams?.status) where.status = searchParams.status;
+  if (params?.status) where.status = params.status;
 
   const comments = await prisma.comment.findMany({ where, include: { author: true, post: true }, orderBy: { createdAt: "desc" }, take: 100 });
 

@@ -6,7 +6,13 @@ export const metadata = {
   title: "Giriş Yap",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string }>;
+}) {
+  const sp = await searchParams;
+
   return (
     <div className="mx-auto flex min-h-screen max-w-md items-center">
       <div className="w-full space-y-6 rounded-lg border bg-card p-8 shadow-sm">
@@ -18,7 +24,7 @@ export default function LoginPage() {
         </div>
 
         <Suspense fallback={null}>
-          <LoginForm />
+          <LoginForm callbackUrl={sp.callbackUrl} />
         </Suspense>
       </div>
     </div>

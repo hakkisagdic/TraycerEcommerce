@@ -18,7 +18,7 @@ export default function AdminSidebar() {
   return (
     <aside className="w-64 bg-zinc-900 text-white min-h-screen p-4">
       <div className="mb-6">
-        <div className="text-xl font-bold">Traycer</div>
+        <div className="text-xl font-bold">GSÜ</div>
         <div className="text-sm text-zinc-400">Admin Panel</div>
       </div>
 

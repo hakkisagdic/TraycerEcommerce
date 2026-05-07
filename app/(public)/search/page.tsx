@@ -4,10 +4,11 @@ import { searchPostsForListing } from "../../../lib/search";
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams?: any;
+  searchParams: Promise<{ q?: string }>;
 }) {
+  const params = await searchParams;
   const q =
-    typeof searchParams?.q === "string" ? searchParams.q.trim() : "";
+    typeof params?.q === "string" ? params.q.trim() : "";
 
   if (!q) {
     return (

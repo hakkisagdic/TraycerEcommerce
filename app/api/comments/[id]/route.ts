@@ -5,16 +5,17 @@ import { prisma } from "@/lib/prisma";
 
 const ALLOWED_STATUSES = new Set(["pending", "approved", "rejected"]);
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const comment = await prisma.comment.findUnique({
-    where: { id: params.id },
+    where: { id: p.id },
     include: {
       author: { select: { id: true, name: true, email: true } },
       post: { select: { id: true, title: true, slug: true } },
@@ -29,6 +30,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
 }
 
 export async function PUT(request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,14 +51,14 @@ export async function PUT(request: Request, { params }: RouteContext) {
   }
 
   const existing = await prisma.comment.findUnique({
-    where: { id: params.id },
+    where: { id: p.id },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const updated = await prisma.comment.update({
-    where: { id: params.id },
+    where: { id: p.id },
     data: { status: body.status },
     include: {
       author: { select: { id: true, name: true, email: true } },
@@ -68,18 +70,19 @@ export async function PUT(request: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
+  const p = await params;
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const existing = await prisma.comment.findUnique({
-    where: { id: params.id },
+    where: { id: p.id },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.comment.delete({ where: { id: params.id } });
+  await prisma.comment.delete({ where: { id: p.id } });
   return NextResponse.json({ success: true });
 }
