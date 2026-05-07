@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "traycerCms": {
+      "type": "http",
+      "url": "http://localhost:3001/api/mcp/mcp",
+      "headers": {
+        "Authorization": "Bearer c64ac00c85026f1d944b6204a32b09bc33ac4939d76a864d7ec8f8be149cb7cf"
+      }
+    }
+  }
+}

@@ -1,10 +1,20 @@
 import { createMcpHandler } from "mcp-handler";
+import { headers as nextHeaders } from "next/headers";
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { searchPosts } from "@/lib/search";
+
+type AdminSession = {
+  user: {
+    id: string;
+    email?: string | null;
+    name?: string | null;
+    role: "admin";
+  };
+};
 
 const ALLOWED_POST_STATUSES = ["draft", "published"] as const;
 const ALLOWED_COMMENT_STATUSES = ["pending", "approved", "rejected"] as const;
@@ -32,12 +42,53 @@ function errorResult(message: string) {
   };
 }
 
-async function requireAdmin() {
+async function getAdminContext(): Promise<{
+  session: AdminSession | null;
+  isAdmin: boolean;
+}> {
   const session = await auth();
-  if (session?.user?.role !== "admin") {
+  if (session?.user?.role === "admin" && session.user.id) {
+    return { session: session as unknown as AdminSession, isAdmin: true };
+  }
+
+  const token = process.env.MCP_ADMIN_TOKEN;
+  if (token && token.length > 0) {
+    const headerList = await nextHeaders();
+    const header = headerList.get("authorization") ?? headerList.get("x-mcp-admin-token");
+    const presented = header?.startsWith("Bearer ")
+      ? header.slice(7)
+      : header ?? "";
+    if (presented && presented === token) {
+      const adminUser = await prisma.user.findFirst({
+        where: { role: "admin" },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, email: true, name: true },
+      });
+      if (adminUser) {
+        return {
+          session: {
+            user: {
+              id: adminUser.id,
+              email: adminUser.email,
+              name: adminUser.name,
+              role: "admin",
+            },
+          },
+          isAdmin: true,
+        };
+      }
+    }
+  }
+
+  return { session: null, isAdmin: false };
+}
+
+async function requireAdmin() {
+  const ctx = await getAdminContext();
+  if (!ctx.isAdmin || !ctx.session) {
     return { error: "Unauthorized: admin role required", session: null };
   }
-  return { error: null, session };
+  return { error: null, session: ctx.session };
 }
 
 const handler = createMcpHandler(
@@ -53,8 +104,7 @@ const handler = createMcpHandler(
       limit: z.number().int().min(1).max(100).default(10),
     },
     async ({ status, categoryId, tag, page, limit }) => {
-      const session = await auth();
-      const isAdmin = session?.user?.role === "admin";
+      const { isAdmin } = await getAdminContext();
 
       const where: Prisma.PostWhereInput = {};
 
@@ -113,8 +163,7 @@ const handler = createMcpHandler(
       id: z.string().min(1),
     },
     async ({ id }) => {
-      const session = await auth();
-      const isAdmin = session?.user?.role === "admin";
+      const { isAdmin } = await getAdminContext();
       const authorSelect = isAdmin
         ? { id: true, name: true, email: true }
         : { id: true, name: true };

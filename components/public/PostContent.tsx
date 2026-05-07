@@ -145,7 +145,7 @@ export default function PostContent({ post }: { post: any }) {
   const tags: Array<{ tag: { id: string; name: string; slug: string } }> = post?.tags ?? [];
 
   return (
-    <article className="prose prose-invert max-w-none">
+    <article className="prose dark:prose-invert max-w-none">
       {post.featuredImage ? (
         <Image
           src={post.featuredImage}
