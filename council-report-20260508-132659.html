@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>LLM Council — GSU-5 Verdict</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#fafaf9; --card:#ffffff; --ink:#1f2937; --mute:#6b7280;
+    --line:#e5e7eb; --accent:#0f766e; --warn:#b45309; --bad:#b91c1c;
+    --good:#15803d; --softaccent:#ecfdf5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;font-size:15px}
+  .wrap{max-width:880px;margin:40px auto;padding:0 20px}
+  h1{font-size:26px;margin:0 0 4px}
+  h2{font-size:19px;margin:28px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}
+  h3{font-size:16px;margin:18px 0 6px}
+  .meta{color:var(--mute);font-size:13px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:18px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+  .verdict{border-left:4px solid var(--accent);background:var(--softaccent)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;background:var(--line);color:var(--ink);margin-right:6px}
+  .pill.warn{background:#fef3c7;color:var(--warn)}
+  .pill.bad{background:#fee2e2;color:var(--bad)}
+  .pill.good{background:#dcfce7;color:var(--good)}
+  table{width:100%;border-collapse:collapse;margin:8px 0}
+  td,th{border:1px solid var(--line);padding:8px 10px;text-align:left;font-size:14px;vertical-align:top}
+  th{background:#f3f4f6;font-weight:600}
+  details{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin-bottom:8px}
+  details summary{cursor:pointer;font-weight:600;outline:none}
+  details[open]{padding-bottom:14px}
+  blockquote{border-left:3px solid var(--line);margin:8px 0;padding:6px 14px;color:#374151;background:#f9fafb;border-radius:0 6px 6px 0}
+  code{background:#f3f4f6;padding:1px 6px;border-radius:4px;font-size:13px}
+  ul{margin:6px 0 6px 22px}
+  .footer{color:var(--mute);font-size:12px;margin-top:30px;text-align:center}
+  .legend{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
+  .legend > div{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;text-align:center;font-size:13px}
+  .legend strong{display:block;margin-bottom:4px}
+  .agree{color:var(--good)}
+  .clash{color:var(--warn)}
+  .blind{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>LLM Council Verdict</h1>
+<div class="meta">
+  <strong>Konu:</strong> Linear GSU-5 — Post Revision History &amp; Autosave ·
+  <strong>Tarih:</strong> 2026-05-08 13:26 ·
+  <strong>Proje:</strong> Traycer Blog CMS (Next.js 16 + Prisma SQLite + Tiptap)
+</div>
+
+<div class="card verdict">
+  <h2 style="border:none;margin-top:0">Sonuç: <span class="pill warn">Yeniden tanımla &amp; küçülterek hemen ship et</span></h2>
+  <p><strong>GSU-5'i spec'teki haliyle yapma.</strong> Issue'yu yeniden yaz, scope'u ~%80 küçült, sunucu tarafı PostRevision'ı GSU-2 (Postgres) sonrasına ertele. Asli savunma istemci tarafında: <em>Tiptap onUpdate → localStorage (1sn debounce) + beforeunload + "kurtarılmamış taslağın var" prompt'u + "Saved Xs ago" indikatörü.</em></p>
+  <p><strong>Bir sonraki adım (Pazartesi sabahı):</strong> Linear'da GSU-5 başlığını <em>"Client-side draft recovery + session history (Tiptap + localStorage)"</em> olarak değiştir, sunucu tarafı PostRevision spec'ini ayrı yeni bir issue'ya çıkar ve GSU-2'ye bağla. İlk commit: <code>hooks/useDraftRecovery.ts</code>.</p>
+</div>
+
+<h2>Konsey Pozisyonları (özet)</h2>
+<div class="legend">
+  <div><strong>Contrarian</strong>SQLite write-lock bombası → ertele</div>
+  <div><strong>First Principles</strong>JTBD: yazıyı kaybetmeme → localStorage yeter</div>
+  <div><strong>Expansionist</strong>Veri altın madeni → genişlet</div>
+  <div><strong>Outsider</strong>Over-engineering → 1 günlük basit çözüm</div>
+  <div><strong>Executor</strong>4 saatlik v0 ile spec'in çoğu yapılır</div>
+</div>
+
+<h2>Hizalanma Matrisi</h2>
+<table>
+  <tr><th>Soru</th><th>Contrarian</th><th>First Princ.</th><th>Expansionist</th><th>Outsider</th><th>Executor</th></tr>
+  <tr><td>Spec'i şimdi yap?</td><td class="bad">Hayır, ertele</td><td class="bad">Hayır, YAGNI</td><td class="agree">Evet, genişlet</td><td class="bad">Hayır, böl</td><td class="agree">Evet, küçük v0</td></tr>
+  <tr><td>SQLite üstünde OK mi?</td><td class="bad">Hayır</td><td>—</td><td>—</td><td>—</td><td class="agree">Evet (WAL)</td></tr>
+  <tr><td>localStorage öncelik?</td><td>—</td><td class="agree">Birincil</td><td>—</td><td class="agree">Birincil</td><td>—</td></tr>
+  <tr><td>Diff drawer şimdi?</td><td class="bad">Hayır</td><td class="bad">Hayır</td><td class="agree">Evet, üstüne</td><td class="bad">Hayır</td><td class="bad">Sonra</td></tr>
+  <tr><td>50 retention doğru?</td><td class="bad">Hayır (zaman+milestone)</td><td class="bad">Uydurma sayı</td><td class="bad">Milestone tabanlı</td><td>—</td><td class="agree">OK, raw SQL</td></tr>
+</table>
+
+<h2 class="agree">Konseyin Hemfikir Olduğu</h2>
+<div class="card">
+  <ul>
+    <li>Spec'teki haliyle GSU-5 <strong>over-engineered</strong>. Diff drawer + auto retention + restore endpoint v0 için gereksiz.</li>
+    <li>Gerçek problem <strong>"kayıp yazı korkusu"</strong>; revision arşivciliği değil. Çözüm istemci katmanında olmalı.</li>
+    <li>Solo dev + tek yazar bağlamında server-side revision tablosunun marjinal değeri çok düşük.</li>
+    <li>"Son 50 revizyon" sayı bazlı retention hibrit (zaman + milestone) olmalı; spec'teki haliyle yanlış.</li>
+  </ul>
+</div>
+
+<h2 class="clash">Konseyin Çatıştığı</h2>
+<div class="card">
+  <ul>
+    <li><strong>PostRevision tablosu hiç gerekmez (First Principles, Outsider)</strong> vs. <strong>minimum şemayla şimdi yapılır (Executor)</strong> vs. <strong>genişletilerek yapılır (Expansionist)</strong>. Çatışma maliyet/değer eğrisinde: Executor 2.5 saatlik maliyeti hesaplıyor; First Principles bu zamanı başka issue'ya kaydırmayı tercih ediyor.</li>
+    <li><strong>GSU-2 önce mi?</strong> Contrarian: write-lock paniği → Postgres önce. Executor: WAL yeter, SQLite'ta sorun yok. Reviewer 2 Contrarian'a yarı destek (dev HMR + autosave kombinasyonu).</li>
+    <li><strong>Genişlet (Expansionist) vs. küçült (First Princ. + Outsider).</strong> Üç peer review da Expansionist'i blind-spot olarak işaretledi; ancak uzun vadeli vizyon kayda değer.</li>
+  </ul>
+</div>
+
+<h2 class="blind">Peer Review'ın Yakaladığı Blind Spot'lar</h2>
+<div class="card">
+  <ul>
+    <li><strong>Tiptap'in built-in <code>history</code> extension'ı (undo/redo) zaten var.</strong> Hiçbir advisor "build vs. zaten-var" sorgusunu yapmadı. 3/3 reviewer aynı tespiti ortaya çıkardı — bu en yüksek sinyalli bulgu.</li>
+    <li><strong>Asıl risk yüzeyi yalnızca "sayfa/tab kapanması + crash"</strong> — <code>beforeunload</code> + localStorage snapshot ile tek başına çözülür. PostRevision tablosu bu spesifik problemi gereğinden fazla ele alıyor.</li>
+    <li><strong>Dev ortamı tehlikesi:</strong> Next.js HMR + Prisma SQLite + 5sn autosave dev'de patlar (prod'da değil).</li>
+    <li><strong>Backlog hijyeni:</strong> "GSU-5'i ertele" issue'yu çürütür. Doğru hareket: <em>yeni bir spec ile yeniden yazmak</em> ya da kapatmak.</li>
+    <li>GSU-5'in diğer issue'larla bağımlılık haritası ve ders projesi rubric/teslim kriteri hiç sorgulanmadı.</li>
+  </ul>
+</div>
+
+<h2>Advisor Tam Cevapları</h2>
+
+<details>
+  <summary>The Contrarian — "Ertele, önce GSU-2"</summary>
+  <blockquote>
+    SQLite + her 5sn full snapshot = yazma kuyruğu bombası. Tek yazıcılı, WAL açık olsa bile commit serileştirilir. 50KB × 50 revizyon = 2.5MB ölü veri. Sadece debounce yetmez — content-hash diff + idempotency + no-op skip lazım. "Son 50" sayı bazlı saçma; zaman + milestone hibrit olmalı. Diff drawer scope creep.<br><br>
+    <strong>Önerim:</strong> ERTELE. Önce GSU-2. Sonra autosave content-hash diff ile, snapshot yerine değişiklik varsa yaz.
+  </blockquote>
+</details>
+
+<details>
+  <summary>The First Principles Thinker — "Yanlış soruyu çözüyorsun"</summary>
+  <blockquote>
+    Kullanıcı revizyon istemiyor; <strong>"yazımı kaybetmeme güvencesi"</strong> istiyor. Spec çözümü problemin yerine koymuş. Solo dev + tek yazar + sıfır eşzamanlılık → "şubat 3'teki versiyona dön" senaryosu sıfıra yakın. PostRevision'ın değerinin %90'ı tek senaryoda: tarayıcı çöktü.<br><br>
+    Çözüm tablo değil — <code>localStorage</code>. Tiptap içeriğini her keystroke'ta (debounce 500ms) localStorage'a yaz, sayfa açılışta "kurtarılmamış taslağın var" sor.<br><br>
+    <strong>Faz 1 (2 saat):</strong> localStorage + indikatör. <strong>Faz 2:</strong> Bir kullanıcı talep ederse PostRevision. Şu an inşa etmek YAGNI.
+  </blockquote>
+</details>
+
+<details>
+  <summary>The Expansionist — "Bu tablo bir altın maden"</summary>
+  <blockquote>
+    Revision history yedekleme değil — yapısal veri altın madeni. Hidden upside:<br>
+    (1) AI-assisted writing corpus (Claude'a "son 5 revizyondan niyeti bul, cilala");<br>
+    (2) "Writing Replay" timeline — Substack/Ghost/Medium'da yok, jüriyi devirir;<br>
+    (3) Audit trail enterprise SaaS;<br>
+    (4) Collaborative editing'in %80'i hazır olur.<br><br>
+    Spec'i genişlet: <code>userId</code>, <code>wordCount</code>, <code>editDurationMs</code>, <code>aiAssisted</code> alanları + milestone retention + "Compare with AI" butonu. 5sn autosave bir feature değil, yazı sürecinin event stream'i.
+  </blockquote>
+</details>
+
+<details>
+  <summary>The Outsider — "Diff görünümü kim için?"</summary>
+  <blockquote>
+    Kapıdan yeni girdim, kafam karıştı. "PostRevision modeli", "diff-match-patch" geliştirici dili. Yazar insanlar "kırmızı-yeşil farkları" istemez — "yanlışlıkla sildiğim paragrafı geri alabileyim" ister. Bunlar aynı şey değil.<br><br>
+    "Saved Xs ago" Google Docs reflex'i — orada 50 kişi yazıyor; senin CMS'inde tek yazar var. Solo projede günde 2-5 post; ayda bir "yazım gitti" oluyorsa çözüm 50 satır localStorage taslak.<br><br>
+    <strong>Önerim:</strong> İkiye böl. localStorage + indikatör (1 gün). 1 ay kullan. "Keşke eski versiyona dönseydim" oldu mu — o zaman PostRevision.
+  </blockquote>
+</details>
+
+<details>
+  <summary>The Executor — "Pazartesi 4 saatlik v0"</summary>
+  <blockquote>
+    <strong>C1 — Schema (20dk):</strong> <code>PostRevision { id, postId, content, title, createdAt }</code> + index. SQLite + 5sn paniği teorik; solo dev + WAL yeter.<br><br>
+    <strong>C2 — Endpoint (45dk):</strong> <code>POST /api/posts/[id]/autosave</code>, raw SQL ile son 50 retention. GET list aynı dosyada.<br><br>
+    <strong>C3 — Hook (1 saat):</strong> <code>useAutosave</code>, debounce <strong>10sn</strong> (5sn solo dev için gürültü).<br><br>
+    <strong>C4 — İndikatör (30dk):</strong> Toolbar'a <code>formatDistanceToNow</code> span.<br><br>
+    <strong>Kesilenler:</strong> Diff drawer SONRA. Restore endpoint'i SONRA — v0'da revision GET → editor'e set → normal save. Toplam: 2.5 saat kod + 1 saat test.
+  </blockquote>
+</details>
+
+<details>
+  <summary>Peer Review Özetleri</summary>
+  <p><strong>Reviewer 1:</strong> En güçlü D, en büyük blind spot E (kullanıcısı olmayan ürün hayali). Hepsinin kaçırdığı: Tiptap zaten history tutuyor; ders projesi rubric'i sorgulanmadı.</p>
+  <p><strong>Reviewer 2:</strong> En güçlü D ("yazı kaybetmeme güvencesi" doğru izole). E YAGNI'nin tam tersi. Hepsinin kaçırdığı: <code>beforeunload</code> + localStorage tek başına yeter; HMR + SQLite + autosave dev'de patlar; "ertele" yerine issue'yu yeniden yaz.</p>
+  <p><strong>Reviewer 3:</strong> En güçlü D (JTBD doğru). E kullanıcısız vizyon. Hepsinin kaçırdığı: Tiptap built-in <code>history</code> extension'ı + Y.js collaboration-history snapshot zaten var — kimse mevcut araçların kapasitesini incelemedi.</p>
+</details>
+
+<div class="footer">
+  Methodology: Andrej Karpathy's LLM Council · Skill: <code>tenfoldmarc/llm-council-skill</code> · Generated 2026-05-08 13:26:59
+</div>
+
+</div>
+</body>
+</html>
